@@ -1,4 +1,4 @@
-const CACHE = 'ca-trip-v2';
+const CACHE = 'ca-trip-v3';
 const FILES = ['./', './index.html', './manifest.json', './sw.js', './icon-192.svg'];
 
 self.addEventListener('install', e => {

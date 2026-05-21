@@ -748,7 +748,7 @@
   <div class="header-row">
     <div>
       <div class="app-title">🏕️ California Trip 2026</div>
-      <div class="app-dates">May 29 – June 5 · George &amp; Doug</div>
+      <div class="app-dates">May 29 – June 7 · George &amp; Doug</div>
     </div>
     <button class="header-btn" id="search-toggle" aria-label="Search">🔍</button>
   </div>
@@ -1765,14 +1765,14 @@ const DAYS = [
     location: 'Mill Valley → Healdsburg',
     sublocation: 'Dry Creek Valley',
     theme: 'healdsburg',
-    stay: 'Best Western Dry Creek Inn, Healdsburg',
+    stay: 'The Lodge at Healdsburg',
     sections: [
       {
         label: 'Drive',
         icon: '🚗',
         content: 'Mill Valley → Healdsburg — ~1h 15m via Hwy 101 north through Marin and Sonoma.',
         notes: [
-          { type: 'info', text: '~1h 15m · Hwy 101 north · Best Western Dry Creek Inn on arrival' }
+          { type: 'info', text: '~1h 15m · Hwy 101 north · The Lodge at Healdsburg on arrival' }
         ]
       },
       {
@@ -1802,9 +1802,55 @@ const DAYS = [
         ]
       },
       {
-        label: 'Dinner',
+        label: 'Welcome Party',
         icon: '🥂',
-        content: 'Rehearsal dinner — 6–7pm. No additional dinner needed. Rest and celebrate.',
+        content: 'Preston Farm & Winery — 6:00–9:00 PM.\n\nDress: Casual Chic — sundresses, skirts and tops, jumpsuits; trousers and t-shirts, denim and jackets.',
+        address: 'Preston Farm & Winery, West Dry Creek Rd, Healdsburg, CA',
+        notes: [
+          { type: 'info', text: 'Wear sturdy shoes and bring layers' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 9,
+    date: 'Saturday, June 6',
+    location: 'Healdsburg',
+    sublocation: 'Dry Creek Valley',
+    theme: 'healdsburg',
+    stay: 'The Lodge at Healdsburg',
+    sections: [
+      {
+        label: 'Morning',
+        icon: '☀️',
+        content: 'Free morning — Healdsburg Plaza, coffee, rest up before the big event.',
+        address: 'Healdsburg Plaza, Healdsburg, CA',
+        notes: []
+      },
+      {
+        label: 'The Wedding',
+        icon: '💍',
+        content: 'Ceremony at 4:00 PM.\n\nDress: Formal with Flair — suits and dresses with fun colors, patterns, or accessories.',
+        address: '4250 West Dry Creek Road, Healdsburg, CA',
+        notes: [
+          { type: 'info', text: 'Wear sturdy shoes and bring layers' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 10,
+    date: 'Sunday, June 7',
+    location: 'Healdsburg',
+    sublocation: 'Westside Road',
+    theme: 'healdsburg',
+    stay: 'The Lodge at Healdsburg',
+    sections: [
+      {
+        label: 'Farewell Brunch',
+        icon: '🌸',
+        content: 'Farewell Brunch — 10:00 AM to 1:00 PM.\n\nDress: Sunday Morning Picnic Attire.',
+        address: 'Dragonfly Farm & Floral, Westside Rd, Healdsburg, CA',
         notes: []
       }
     ]
@@ -1844,9 +1890,7 @@ const QUICK_REF = {
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 
-let searchOpen = false;
-let sheetOpen = false;
-let currentTab = 'cashOnly';
+const state = { searchOpen: false, sheetOpen: false, currentTab: 'cashOnly', ddOpen: false };
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 
@@ -1890,19 +1934,12 @@ function renderSection(dayId, section) {
   const alertBadges = (section.notes || [])
     .filter(n => n.type !== 'info')
     .slice(0, 3)
-    .map(n => {
-      const icon = n.type === 'cash' ? '💵' : n.type === 'warning' ? '⚠️' : '📋';
-      return `<span class="badge">${icon}</span>`;
-    }).join('');
+    .map(n => `<span class="badge">${noteIcon(n.type)}</span>`)
+    .join('');
 
-  const notesHtml = (section.notes || []).map(n => {
-    const cls = n.type === 'cash' ? 'note-cash'
-              : n.type === 'warning' ? 'note-warn'
-              : n.type === 'reservation' ? 'note-res'
-              : 'note-info';
-    const icon = n.type === 'cash' ? '💵' : n.type === 'warning' ? '⚠️' : n.type === 'reservation' ? '📋' : 'ℹ️';
-    return `<div class="note ${cls}"><span class="note-icon">${icon}</span><span class="note-text">${esc(n.text)}</span></div>`;
-  }).join('');
+  const notesHtml = (section.notes || []).map(n =>
+    `<div class="note ${noteClass(n.type, section.label)}"><span class="note-icon">${noteIcon(n.type)}</span><span class="note-text">${esc(n.text)}</span></div>`
+  ).join('');
 
   return `
     <div class="section" data-day="${dayId}" data-label="${esc(section.label)}">
@@ -1942,9 +1979,9 @@ function setupSearch() {
   const legend    = document.getElementById('legend');
 
   toggleBtn.addEventListener('click', () => {
-    searchOpen = !searchOpen;
-    bar.classList.toggle('hidden', !searchOpen);
-    if (searchOpen) {
+    state.searchOpen = !state.searchOpen;
+    bar.classList.toggle('hidden', !state.searchOpen);
+    if (state.searchOpen) {
       input.focus();
       showHistory();
     } else {
@@ -1978,7 +2015,7 @@ function setupSearch() {
 }
 
 function closeSearch() {
-  searchOpen = false;
+  state.searchOpen = false;
   document.getElementById('search-bar').classList.add('hidden');
   document.getElementById('search-history').classList.add('hidden');
   document.getElementById('search-results').classList.add('hidden');
@@ -2062,7 +2099,9 @@ function jumpTo(dayId, sectionLabel) {
 
 function hilite(text, query) {
   const safe = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return esc(text).replace(new RegExp(`(${safe})`, 'gi'), '<mark>$1</mark>');
+  return text.split(new RegExp(`(${safe})`, 'gi'))
+    .map(p => p.toLowerCase() === query.toLowerCase() ? `<mark>${esc(p)}</mark>` : esc(p))
+    .join('');
 }
 
 // ─── SEARCH HISTORY ───────────────────────────────────────────────────────────
@@ -2070,11 +2109,11 @@ function hilite(text, query) {
 function saveHistory(q) {
   let h = getHistory().filter(x => x !== q);
   h.unshift(q);
-  localStorage.setItem('ca-trip-history', JSON.stringify(h.slice(0, 6)));
+  localStorage.setItem('ca-trip-v2:history', JSON.stringify(h.slice(0, 6)));
 }
 
 function getHistory() {
-  try { return JSON.parse(localStorage.getItem('ca-trip-history') || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem('ca-trip-v2:history') || '[]'); } catch { return []; }
 }
 
 function showHistory() {
@@ -2096,30 +2135,31 @@ function applyHistory(q) {
 // ─── QUICK REF SHEET ──────────────────────────────────────────────────────────
 
 function setupSheet() {
-  document.getElementById('quick-ref-btn').addEventListener('click', () => openSheet(currentTab));
+  document.getElementById('quick-ref-btn').addEventListener('click', () => openSheet(state.currentTab));
   document.getElementById('sheet-close-btn').addEventListener('click', closeSheet);
   document.getElementById('sheet-backdrop').addEventListener('click', () => {
-    if (sheetOpen) closeSheet();
-    else if (ddOpen) closeDeepDive();
+    if (state.sheetOpen) closeSheet();
+    else if (state.ddOpen) closeDeepDive();
   });
 
   document.querySelectorAll('.sheet-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      currentTab = tab.dataset.tab;
+      state.currentTab = tab.dataset.tab;
       document.querySelectorAll('.sheet-tab').forEach(t => t.classList.toggle('active', t === tab));
-      renderSheetContent(currentTab);
+      renderSheetContent(state.currentTab);
     });
   });
 }
 
 function openSheet(tab) {
+  if (state.ddOpen) closeDeepDive();
   if (tab) {
-    currentTab = tab;
+    state.currentTab = tab;
     document.querySelectorAll('.sheet-tab').forEach(t =>
       t.classList.toggle('active', t.dataset.tab === tab)
     );
   }
-  renderSheetContent(currentTab);
+  renderSheetContent(state.currentTab);
 
   const backdrop = document.getElementById('sheet-backdrop');
   const sheet    = document.getElementById('quick-ref-sheet');
@@ -2132,7 +2172,7 @@ function openSheet(tab) {
     sheet.classList.add('vis');
   }));
 
-  sheetOpen = true;
+  state.sheetOpen = true;
 }
 
 function closeSheet() {
@@ -2144,7 +2184,7 @@ function closeSheet() {
     backdrop.style.display = 'none';
     sheet.style.display = 'none';
   }, 260);
-  sheetOpen = false;
+  state.sheetOpen = false;
 }
 
 function renderSheetContent(tab) {
@@ -2167,6 +2207,17 @@ function setupServiceWorker() {
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 
+const VALID_NOTE_TYPES = new Set(['cash', 'warning', 'reservation', 'info']);
+
+function noteClass(type, sectionTitle) {
+  if (!VALID_NOTE_TYPES.has(type)) console.warn(`Unknown note type "${type}" in section "${sectionTitle}"`);
+  return type === 'cash' ? 'note-cash' : type === 'warning' ? 'note-warn' : type === 'reservation' ? 'note-res' : 'note-info';
+}
+
+function noteIcon(type) {
+  return type === 'cash' ? '💵' : type === 'warning' ? '⚠️' : type === 'reservation' ? '📋' : 'ℹ️';
+}
+
 function esc(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -2178,9 +2229,8 @@ function esc(s) {
 
 // ─── DEEP DIVE ────────────────────────────────────────────────────────────────
 
-let ddOpen = false;
-
 function openDeepDive(dayId) {
+  if (state.sheetOpen) closeSheet();
   const day = DAYS.find(d => d.id === dayId);
   if (!day || !day.deepDive) return;
   const dd = day.deepDive;
@@ -2205,7 +2255,7 @@ function openDeepDive(dayId) {
     backdrop.classList.add('vis');
     sheet.classList.add('vis');
   }));
-  ddOpen = true;
+  state.ddOpen = true;
 }
 
 function closeDeepDive() {
@@ -2217,7 +2267,7 @@ function closeDeepDive() {
     backdrop.style.display = 'none';
     sheet.style.display = 'none';
   }, 260);
-  ddOpen = false;
+  state.ddOpen = false;
 }
 
 function renderDDTimeline(rows) {
@@ -2238,11 +2288,9 @@ function renderDDTimeline(rows) {
 }
 
 function renderDDSection(s) {
-  const notesHtml = (s.notes || []).map(n => {
-    const cls  = n.type === 'cash' ? 'note-cash' : n.type === 'warning' ? 'note-warn' : n.type === 'reservation' ? 'note-res' : 'note-info';
-    const icon = n.type === 'cash' ? '💵' : n.type === 'warning' ? '⚠️' : n.type === 'reservation' ? '📋' : 'ℹ️';
-    return `<div class="note ${cls}" style="margin-top:6px"><span class="note-icon">${icon}</span><span class="note-text">${esc(n.text)}</span></div>`;
-  }).join('');
+  const notesHtml = (s.notes || []).map(n =>
+    `<div class="note ${noteClass(n.type, s.label)}" style="margin-top:6px"><span class="note-icon">${noteIcon(n.type)}</span><span class="note-text">${esc(n.text)}</span></div>`
+  ).join('');
 
   const tipsHtml = (s.tips || []).length
     ? `<div class="dd-tips">${s.tips.map(t => `<div class="dd-tip"><div class="dd-tip-dot"></div><span>${esc(t)}</span></div>`).join('')}</div>`
@@ -2273,7 +2321,7 @@ function renderChecklist(cl) {
     <div class="dd-checklist">
       <div class="dd-group-label" style="padding:8px 0 6px;font-size:13px">${esc(cl.label)}</div>
       ${cl.items.map((item, i) => {
-        const key = `ca-check-${cl.id}-${i}`;
+        const key = `ca-trip-v2:check:${cl.id}-${i}`;
         const checked = localStorage.getItem(key) === '1';
         return `
           <div class="checklist-item${checked ? ' checked' : ''}" onclick="toggleCheck('${key}', this)">
