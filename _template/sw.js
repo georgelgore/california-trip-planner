@@ -1,6 +1,9 @@
 // TODO: rename CACHE to something unique for this trip, e.g. 'japan-2027-v1'
-const CACHE = 'trip-name-v2';
-const PRECACHE = ['./', './index.html', './manifest.json', './sw.js', './icon-192.svg'];
+const CACHE = 'trip-name-v1';
+const PRECACHE = [
+  './', './index.html', './data.js', './manifest.json', './sw.js', './icon-192.svg',
+  '../../shared/app.css', '../../shared/app.js',
+];
 
 // ── Install: prime the cache so the app works offline after first visit ─────
 self.addEventListener('install', e => {

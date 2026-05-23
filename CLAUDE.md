@@ -5,18 +5,28 @@
 ```
 trip-itinerary/
 ├── index.html              ← landing page (list of trips)
+├── shared/
+│   ├── app.css             ← all shared CSS (layout, components, edit mode)
+│   └── app.js              ← all shared JS (rendering, navigation, edit mode logic)
 ├── _template/              ← copy this to start a new trip
-│   ├── index.html          ← app shell with placeholder DAYS + QUICK_REF
+│   ├── index.html          ← thin app shell (~130 lines: head, body HTML, 2 script tags)
+│   ├── data.js             ← placeholder TRIP_META, EDIT_CFG, DAYS, QUICK_REF
 │   ├── manifest.json
 │   ├── sw.js
 │   └── icon-192.svg
 └── trips/
     └── destination-year/   ← one folder per trip
-        ├── index.html
+        ├── index.html      ← thin app shell with trip-specific HTML + region CSS
+        ├── data.js         ← TRIP_META, EDIT_CFG, DAYS, QUICK_REF for this trip
         ├── manifest.json
         ├── sw.js
         └── icon-192.svg
 ```
+
+Per-trip `index.html` loads shared assets via `../../shared/app.css` and `../../shared/app.js`.
+Trip-specific data lives in `data.js` (loaded first); `app.js` reads `TRIP_META`, `EDIT_CFG`,
+`DAYS`, and `QUICK_REF` from the global scope set by `data.js`. Only region theme CSS rules stay
+in each trip's `<style>` block.
 
 ## Edit mode (in-app trip editing)
 
@@ -29,7 +39,7 @@ Two layers, applied in this order at boot:
 1. **`localStorage`** — instant, per-device. Key: `<tripId>:days`. Always populated by Save.
 2. **`edits.json`** at the trip's folder — fetched async at boot, applied if newer than the cached copy. This is the cross-device source of truth.
 
-The inline `let DAYS = [...]` constant in `index.html` is the **fallback** — used only if both layers above are absent. It never gets rewritten by the app.
+The `let DAYS = [...]` in `data.js` is the **fallback** — used only if both layers above are absent. It never gets rewritten by the app.
 
 ### Publishing edits to GitHub
 
@@ -60,16 +70,13 @@ Those still require an editor + commit by hand.
 
 ### Edit-mode files
 
-The edit-mode CSS, HTML chrome, and JS live as templates in `_edit_mode/`:
+Edit-mode CSS, HTML, and JS all live in the shared files:
 
-```
-_edit_mode/
-  edit-mode.css   — styles for edit chrome, editable day card, section form, settings sheet, toast
-  edit-mode.html  — the brown edit header + settings sheet markup
-  edit-mode.js    — enter/exit, render, save, GitHub commit, toast
-```
+- **`shared/app.css`** — edit chrome styles, editable day card, section form, settings sheet, toast
+- **`shared/app.js`** — `enterEditMode`, `exitEditMode`, `renderDayEdit`, `saveEdits`, `commitToGitHub`, `showToast`, etc.
+- The edit header + settings sheet HTML is in each trip's `index.html` body (identical across trips)
 
-The per-trip `index.html` files include these inline (spliced in during the original edit-mode rollout). To roll out future edit-mode changes to a new trip, splice them in the same way — see `_template/index.html` for the canonical placement of each block.
+To update edit-mode behavior for all trips at once, edit `shared/app.css` or `shared/app.js`.
 
 ## Adding a new trip
 
@@ -79,15 +86,12 @@ The per-trip `index.html` files include these inline (spliced in during the orig
 4. In `trips/destination-year/index.html`:
    - Replace `TRIP_NAME YYYY` in `<title>` and the header `app-title`
    - Replace `DATES · TRAVELERS` in `app-dates`
-   - Replace `TRIP_ID` in the two localStorage key strings with a short unique id (e.g. `japan-27`)
-   - **In the `EDIT_CFG` block (near bottom of script):** set `tripId` (same id), `editsPath: 'trips/destination-year/edits.json'`, and `storageKey: '<tripId>:days'`. The default values use placeholders that need replacing.
-   - **Fill in the `TRIP_META` block** (see schema below) — drives share text + per-day date inference
-   - Update the `<style>` region color variables (`.sf`, `.yosemite`, etc.) to match new regions
-   - **Add matching `.ov-card.<region>` rules** in the overview CSS block so overview accent stripes match the day-header colors
-   - Update the legend block in the HTML body
-   - Update the `sheet-tabs` HTML block to match the QUICK_REF keys you've chosen
-   - Set `state.currentTab` (line ~862) to the first tab key
-   - Update `catLabels` inside `doSearch()` to include any new tab keys with their display labels
+   - Replace the commented-out region CSS rules in `<style>` with actual rules for your trip's regions (`.region1 .day-header`, `.ov-card.region1`, `.editing-card.region1 .edit-day-header`)
+   - Update the legend block with your actual regions + colors
+   - Update the `sheet-tabs` HTML block to match the QUICK_REF keys you've chosen in `data.js`
+5. In `trips/destination-year/data.js`:
+   - Fill in `TRIP_META` (name, shortName, dates, travelers, startDate)
+   - Fill in `EDIT_CFG`: set `tripId` (short unique id, e.g. `japan-27`), `editsPath`, `storageKey`, `initialTab`, and `catLabels` (must match your QUICK_REF keys and sheet-tabs)
    - Fill in `DAYS` and `QUICK_REF` (see schemas below)
 5. Add a card for the new trip in the root `index.html`:
 
@@ -242,9 +246,9 @@ const QUICK_REF = {
 ```
 
 Three things must stay in sync when you add or remove tabs:
-1. The `QUICK_REF` object keys
-2. The `<div class="sheet-tabs">` HTML block (same keys, same order)
-3. The `catLabels` map inside `doSearch()` — maps each key to its search result label (e.g. `cashOnly: 'Cash Only'`). Missing entries will silently omit those results from search.
+1. The `QUICK_REF` object keys in `data.js`
+2. The `<div class="sheet-tabs">` HTML block in `index.html` (same keys, same order)
+3. The `catLabels` map in `EDIT_CFG` in `data.js` — maps each key to its search result label (e.g. `cashOnly: 'Cash Only'`). Missing entries will silently omit those results from search.
 
 ## Ingesting itinerary content
 
@@ -301,15 +305,16 @@ Run `/project:new-trip` for the full step-by-step workflow.
 
 ## Region theme colors
 
-Add a CSS rule in `<style>` for each region used in `day.theme`:
+Each trip's `index.html` has a `<style>` block with three rules per region — day header, overview
+accent stripe, and edit-mode header. Add one set per theme value used in `day.theme` in `data.js`:
 
 ```css
 .sf         .day-header { background: #1a6bac; }
-.yosemite   .day-header { background: #4a7c59; }
-.marin      .day-header { background: #2a8080; }
-.healdsburg .day-header { background: #7c5339; }
-/* Add new regions here */
+.ov-card.sf             { --ov-accent-color: #1a6bac; }
+.editing-card.sf        .edit-day-header { background: #1a6bac; }
 ```
+
+These do **not** go in `shared/app.css` — they are trip-specific.
 
 ## Naming conventions
 
