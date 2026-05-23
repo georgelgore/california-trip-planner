@@ -95,9 +95,11 @@ const QUICK_REF = {
 
 Also update `state.currentTab` to match the first tab key, and the `catLabels` map inside `doSearch()`.
 
-## Ingesting raw itinerary content
+## Ingesting itinerary content
 
-When the user pastes raw HTML or a text itinerary, extract the content — don't copy markup. Structure it directly into `DAYS` and `QUICK_REF`. Useful signals to look for:
+Itineraries can be passed as **YAML** (preferred going forward), raw HTML, or plain text. YAML maps directly to the JS schema — parse it and write the `DAYS`/`QUICK_REF` data straight in. For HTML or plain text, extract content only (no markup) and infer structure from context.
+
+Useful signals regardless of format:
 
 - **Times** → `section.label` (or included in `content`)
 - **Venue names** → `section.label` title portion
@@ -105,6 +107,44 @@ When the user pastes raw HTML or a text itinerary, extract the content — don't
 - **Italic tips / "Note:" callouts** → `notes` array with appropriate type (`info`, `warning`, `reservation`, `cash`)
 - **"Book ahead" / "reservation required"** → `{ type: 'reservation', text: '...' }` note + entry in `QUICK_REF.reservations`
 - **Closing times / "arrive early"** → `{ type: 'warning', text: '...' }` note + entry in `QUICK_REF.hours`
+
+### YAML input shape
+
+```yaml
+trip:
+  name: "Tokyo 2027"
+  dates: "March 14–21"
+  travelers: "George & Doug"
+  hotel: "Trunk Hotel · Shibuya"
+
+days:
+  - id: 1
+    date: "Saturday, March 14"
+    location: "Shibuya"
+    sublocation: "Arrival"
+    theme: shibuya
+    sections:
+      - label: "Check-In"
+        icon: "🏨"
+        content: "Narrative text here."
+        address: "Trunk Hotel · 5-31 Jingumae, Shibuya"
+        notes:
+          - type: info
+            text: "Room may not be ready until 3pm."
+          - type: reservation
+            text: "Dinner at Narisawa — confirm reservation."
+
+quick_ref:
+  hours:
+    - name: "Tsukiji Outer Market"
+      detail: "Most stalls close by noon — arrive by 9am"
+  reservations:
+    - name: "Narisawa"
+      detail: "Reservation required · confirm 48hrs ahead"
+  transit:
+    - name: "Shibuya → Tsukiji"
+      detail: "Tokyo Metro Ginza Line · 20 min · ¥200"
+```
 
 Run `/project:new-trip` for the full step-by-step workflow.
 

@@ -4,12 +4,13 @@ Use this command when the user wants to add a new trip to the repo. Follow these
 
 ## Step 1 — Gather the itinerary content
 
-Ask the user to provide the trip content in any form:
-- Raw HTML they already have
-- A written description of days/activities
-- A mix of both
+The user will provide the trip content as **YAML** (preferred), raw HTML, or a written description. Accept any of these without asking them to reformat.
 
-If they paste raw HTML, extract the structured data from it (venues, times, addresses, notes, descriptions). Do not copy HTML markup — only the content.
+**If YAML:** parse it directly into `DAYS` and `QUICK_REF`. The expected shape mirrors the JS schema in `CLAUDE.md` — days with sections, sections with label/icon/content/address/notes. Map YAML keys to JS fields 1-to-1; infer any missing `icon` emojis from context.
+
+**If HTML:** extract the structured content (venues, times, addresses, callout text). Do not copy HTML markup — only the content.
+
+**If plain text:** infer structure from headings, times, and paragraph breaks.
 
 If details are missing (exact dates, hotel address), ask once then proceed with what's available.
 
