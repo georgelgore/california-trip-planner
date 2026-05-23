@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2c3e50" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LV Trip" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.svg" />
+  <title>Las Vegas 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f2ee;
+      --card: #fff;
+      --text: #1a1a1a;
+      --muted: #666;
+      --border: #e8e5df;
+      --header-h: 56px;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+
+    /* ── HEADER ── */
+    #app-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: #2c3e50;
+      color: #fff;
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      height: var(--header-h);
+    }
+
+    .app-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .app-dates {
+      font-size: 12px;
+      opacity: 0.65;
+      font-weight: 400;
+      margin-top: 1px;
+    }
+
+    .header-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header-btn:active { background: rgba(255,255,255,0.28); }
+    a.header-btn { text-decoration: none; }
+
+    /* ── SEARCH ── */
+    #search-bar {
+      background: #243342;
+      padding: 8px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #search-bar.hidden { display: none; }
+
+    #search-input {
+      flex: 1;
+      background: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 16px;
+      outline: none;
+      color: var(--text);
+    }
+
+    #search-input::placeholder { color: #999; }
+
+    #search-close-btn {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    #search-history {
+      background: #2c3e50;
+      padding: 6px 12px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    #search-history.hidden { display: none; }
+
+    .history-chip {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      border-radius: 14px;
+      padding: 5px 13px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .history-chip:active { background: rgba(255,255,255,0.28); }
+
+    /* ── SEARCH RESULTS ── */
+    #search-results {
+      background: var(--card);
+      min-height: 60px;
+    }
+
+    #search-results.hidden { display: none; }
+
+    .search-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .search-result {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .search-result:active { background: #f5f5f2; }
+
+    .result-tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #aaa;
+      margin-bottom: 3px;
+    }
+
+    .result-main {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .result-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    mark {
+      background: rgba(255, 210, 0, 0.45);
+      color: inherit;
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
+    /* ── MAIN ── */
+    #main-content { padding: 8px 0 16px; }
+
+    /* ── DAY CARD ── */
+    .day-card {
+      margin: 8px 12px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--card);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+    }
+
+    .day-header {
+      padding: 14px 16px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      user-select: none;
+    }
+
+    .strip    .day-header { background: #b8890e; }
+    .offstrip .day-header { background: #2e7d5e; }
+    .downtown .day-header { background: #6b3a8b; }
+
+    .day-header:active { filter: brightness(0.92); }
+
+    .day-header-text { color: #fff; flex: 1; min-width: 0; }
+
+    .day-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      opacity: 0.75;
+      margin-bottom: 2px;
+    }
+
+    .day-date {
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .day-loc {
+      font-size: 13px;
+      opacity: 0.88;
+      margin-top: 4px;
+    }
+
+    .day-stay {
+      font-size: 12px;
+      opacity: 0.68;
+      margin-top: 2px;
+    }
+
+    .chevron {
+      color: rgba(255,255,255,0.75);
+      font-size: 13px;
+      flex-shrink: 0;
+      margin-top: 6px;
+      transition: transform 0.15s;
+    }
+
+    .day-card.open .chevron { transform: rotate(180deg); }
+
+    /* ── SECTIONS ── */
+    .sections { display: none; padding: 6px 10px 10px; }
+    .day-card.open .sections { display: block; }
+
+    .section {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 6px 0;
+      overflow: hidden;
+      background: var(--card);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      padding: 11px 13px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      gap: 9px;
+      background: #fafaf8;
+      user-select: none;
+    }
+
+    .section-header:active { background: #f0ede8; }
+
+    .section-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
+
+    .section-label-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .section-badges { display: flex; gap: 4px; }
+
+    .badge {
+      font-size: 13px;
+      line-height: 1;
+      padding: 2px 1px;
+    }
+
+    .section-chev {
+      font-size: 11px;
+      color: #bbb;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+
+    .section.open .section-chev { transform: rotate(180deg); }
+
+    /* ── SECTION BODY ── */
+    .section-body {
+      display: none;
+      padding: 12px 14px 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .section.open .section-body { display: block; }
+
+    .section-content {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #2a2a2a;
+      white-space: pre-line;
+    }
+
+    .section-address {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #f5f3ef;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    .section-notes { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+
+    .note {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .note-cash { background: #fef9e7; border: 1px solid #f0d060; color: #7a5800; }
+    .note-warn { background: #fff3e0; border: 1px solid #ffcc80; color: #7a4400; }
+    .note-res  { background: #e8f4fb; border: 1px solid #90caf9; color: #1a4e80; }
+    .note-info { background: #f4f4f2; border: 1px solid #ddd;    color: #555; }
+
+    .note-icon { flex-shrink: 0; }
+    .note-text { flex: 1; }
+
+    /* ── BOTTOM BAR ── */
+    #bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      z-index: 40;
+    }
+
+    #quick-ref-btn {
+      width: 100%;
+      padding: 14px;
+      background: #2c3e50;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+    }
+
+    #quick-ref-btn:active { background: #243342; }
+
+    /* ── QUICK REF SHEET ── */
+    #sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.2s;
+      display: none;
+    }
+
+    #sheet-backdrop.vis { opacity: 1; }
+
+    #quick-ref-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-radius: 18px 18px 0 0;
+      z-index: 51;
+      display: none;
+      flex-direction: column;
+      max-height: 82vh;
+      transform: translateY(100%);
+      transition: transform 0.25s ease-out;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+    }
+
+    #quick-ref-sheet.vis { transform: translateY(0); display: flex; }
+
+    .sheet-handle {
+      width: 38px;
+      height: 4px;
+      background: #ccc;
+      border-radius: 2px;
+      margin: 12px auto 2px;
+      flex-shrink: 0;
+    }
+
+    .sheet-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 16px 12px;
+      flex-shrink: 0;
+    }
+
+    .sheet-title { font-size: 17px; font-weight: 700; }
+
+    .sheet-close-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: #eeece8;
+      border-radius: 50%;
+      font-size: 15px;
+      color: #555;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sheet-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex-shrink: 0;
+    }
+
+    .sheet-tabs::-webkit-scrollbar { display: none; }
+
+    .sheet-tab {
+      flex-shrink: 0;
+      padding: 11px 15px;
+      border: none;
+      background: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      color: #888;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .sheet-tab.active {
+      color: #2c3e50;
+      border-bottom-color: #2c3e50;
+      font-weight: 700;
+    }
+
+    #sheet-content {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1;
+      padding: 4px 16px calc(20px + env(safe-area-inset-bottom));
+    }
+
+    .ref-item {
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ref-item:last-child { border-bottom: none; }
+
+    .ref-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .ref-detail {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      margin: 0 12px 0;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (min-width: 600px) {
+      #main-content, .legend { max-width: 600px; margin-left: auto; margin-right: auto; }
+      .day-card { margin: 10px auto; max-width: 576px; }
+      #bottom-bar { max-width: 600px; left: 50%; transform: translateX(-50%); border-radius: 12px 12px 0 0; }
+      #quick-ref-sheet { max-width: 600px; left: 50%; transform: translateX(-50%) translateY(100%); border-radius: 18px 18px 0 0; }
+      #quick-ref-sheet.vis { transform: translateX(-50%) translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header id="app-header">
+  <div class="header-row">
+    <a class="header-btn" href="../../" aria-label="All trips">←</a>
+    <div>
+      <div class="app-title">🎰 Las Vegas 2026</div>
+      <div class="app-dates">Spring 2026 · George &amp; Doug</div>
+    </div>
+    <button class="header-btn" id="search-toggle" aria-label="Search">🔍</button>
+  </div>
+  <div id="search-bar" class="hidden">
+    <input type="search" id="search-input" placeholder="Search places, times, addresses…" autocomplete="off" />
+    <button id="search-close-btn">✕</button>
+  </div>
+  <div id="search-history" class="hidden"></div>
+</header>
+
+<!-- ── SEARCH RESULTS ── -->
+<div id="search-results" class="hidden"></div>
+
+<!-- ── LEGEND ── -->
+<div class="legend" id="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#b8890e"></div> The Strip</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2e7d5e"></div> Arts District &amp; Chinatown</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6b3a8b"></div> Downtown</div>
+</div>
+
+<!-- ── MAIN ── -->
+<main id="main-content"></main>
+
+<!-- ── BOTTOM BAR ── -->
+<div id="bottom-bar">
+  <button id="quick-ref-btn">Quick Ref · Hours · Reservations · Transit ↑</button>
+</div>
+
+<!-- ── QUICK REF SHEET ── -->
+<div id="sheet-backdrop"></div>
+<div id="quick-ref-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row">
+    <span class="sheet-title">Quick Reference</span>
+    <button class="sheet-close-btn" id="sheet-close-btn">✕</button>
+  </div>
+  <div class="sheet-tabs">
+    <button class="sheet-tab active" data-tab="hours">⏰ Hours</button>
+    <button class="sheet-tab" data-tab="reservations">📋 Reservations</button>
+    <button class="sheet-tab" data-tab="transit">🚗 Transit</button>
+    <button class="sheet-tab" data-tab="tips">💡 Tips</button>
+  </div>
+  <div id="sheet-content"></div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const DAYS = [
+  {
+    id: 1,
+    date: 'Saturday — Arrival Day',
+    location: 'The Strip',
+    sublocation: 'Check in · Strip walk · First night out',
+    theme: 'strip',
+    stay: 'Park MGM · 3770 S Las Vegas Blvd',
+    sections: [
+      {
+        label: 'Check-In',
+        icon: '🏨',
+        content: 'Drop bags and get oriented. Park MGM is smoke-free — a genuine rarity on the Strip — with clean, modern rooms and a calm vibe. Walk straight through to the Park for outdoor space before the Strip chaos.',
+        address: 'Park MGM · 3770 S Las Vegas Blvd',
+        notes: [
+          { type: 'info', text: 'Room may not be ready at 11am. Leave bags with bell desk and head to Eataly for lunch.' }
+        ]
+      },
+      {
+        label: 'Lunch',
+        icon: '🍴',
+        content: 'Eataly Las Vegas — right in your hotel. Graze the market counters — pasta, charcuterie, espresso, pastries. Good for an easy first meal while you\'re still in arrival mode. Pick up snacks for the room while you\'re at it.',
+        address: 'Park MGM · Italian Market Hall',
+        notes: []
+      },
+      {
+        label: 'Afternoon — Strip Walk',
+        icon: '🚶',
+        content: 'Walk north on the Strip: Park MGM → Cosmopolitan → Bellagio. Wander through the Cosmopolitan\'s art-forward interiors, then cut through Bellagio to see the conservatory garden. Peek into Aria\'s lobby architecture. This stretch is unusually dense with interesting interiors — treat it like a neighborhood walk.',
+        address: 'Park MGM → Cosmopolitan → Bellagio · Las Vegas Blvd',
+        notes: [
+          { type: 'info', text: 'Best light for photos: 4–5pm golden hour from the Bellagio fountain overlook.' }
+        ]
+      },
+      {
+        label: 'Dinner — Sparrow + Wolf',
+        icon: '🍽️',
+        content: 'The best restaurant in Las Vegas that isn\'t on the Strip — and it\'s not particularly close. Worth the short Uber. A globally-informed small-plates menu that changes constantly: they\'ll want you to let the kitchen guide you. Don\'t fight it. Multiple reviewers call it the best meal they\'ve ever had.',
+        address: '4480 Spring Mountain Rd · Chinatown-Adjacent',
+        notes: [
+          { type: 'reservation', text: 'Book ahead — this place fills up. Let the server make recommendations.' }
+        ]
+      },
+      {
+        label: 'Drinks — Stray Pirate',
+        icon: '🍹',
+        content: 'Dog-themed tiki bar in the Arts District — artisan tropical cocktails in a genuinely weird, lovingly decorated room. Small and popular, so go early-ish or expect to wait. The bartenders are serious about their craft. Don\'t miss the bathrooms.',
+        address: '1321 S Commerce St · Arts District',
+        notes: []
+      }
+    ]
+  },
+  {
+    id: 2,
+    date: 'Sunday — Arts District & Chinatown',
+    location: 'Arts District & Chinatown',
+    sublocation: 'Off-strip eating · Neon Museum · Fremont East',
+    theme: 'offstrip',
+    stay: 'Park MGM · 3770 S Las Vegas Blvd',
+    sections: [
+      {
+        label: 'Coffee — Iwana Specialty',
+        icon: '☕',
+        content: 'Las Vegas\'s best specialty roaster, tucked just off Main Street in the Arts District. Excellent pour overs, a lovely bright space, and solid food. The lavender latte is a standout. Combine with a short wander of the surrounding murals after.',
+        address: '61 W Utah Ave · Arts District',
+        notes: [
+          { type: 'info', text: 'Free street parking on Sundays.' }
+        ]
+      },
+      {
+        label: 'Morning — Arts District Walk',
+        icon: '🎨',
+        content: 'The real creative heart of Las Vegas. Hit The Arts Factory (multi-studio complex, artists in residence), MAD Gallery (curated local work, small but excellent), and wander Art Square for murals. Vintage and thrift shops in between. The whole district rewards wandering.',
+        address: 'Main St & Charleston Blvd',
+        notes: []
+      },
+      {
+        label: 'Lunch — Ton Shou Katsu',
+        icon: '🍱',
+        content: '4.9 stars and 1,200+ reviews — it\'s the real deal. Premium pork katsu with kettle-cooked rice, ramen, takoyaki. Inside Las Vegas\'s underrated Chinatown strip on Spring Mountain Road. Get there early or expect a wait.',
+        address: '4049 Spring Mountain Rd · Las Vegas Chinatown',
+        notes: [
+          { type: 'reservation', text: 'Reservations recommended · Long waits without one' },
+          { type: 'info', text: 'Spring Mountain Road is the move for serious eating in Vegas — don\'t let anyone tell you otherwise.' }
+        ]
+      },
+      {
+        label: 'Afternoon — Chinatown',
+        icon: '🍵',
+        content: 'Explore the strip of markets, bakeries, and specialty shops on Spring Mountain Road. Pop into True Matcha (matcha-only café, ceremonial grade) for an afternoon drink. Browse the Korean and Chinese grocery stores — there are some interesting finds for tea accompaniments.',
+        address: 'Spring Mountain Rd corridor',
+        notes: []
+      },
+      {
+        label: 'Evening — Neon Museum',
+        icon: '🌆',
+        content: 'A graveyard of vintage casino signs — Stardust, Caesars, the Horseshoe. The twilight tour (starting just before sunset) is the best way to experience it, with the refurbished signs lit up against a darkening sky. Buy tickets online in advance; they sell out.',
+        address: '770 Las Vegas Blvd N · Book the twilight tour',
+        notes: [
+          { type: 'reservation', text: 'Buy tickets online in advance — they sell out. Twilight tour is the move.' },
+          { type: 'info', text: 'Tip your guide — they\'re worth it.' }
+        ]
+      },
+      {
+        label: 'Dinner — Casa Di Amore',
+        icon: '🍝',
+        content: 'A deeply local institution: red sauce Italian with a live piano player, communal booths, and a crowd that actually lives here. The lasagna and mushroom risotto are legendary. They make you feel like family — the reviews all say the same thing. Very off-strip, very worth it.',
+        address: '2850 E Tropicana Ave · Old Vegas Italian',
+        notes: [
+          { type: 'warning', text: 'Closes Tuesday & Wednesday — Sunday works perfectly.' }
+        ]
+      },
+      {
+        label: 'Late Night — Fremont East',
+        icon: '🥃',
+        content: 'Oak & Ivy is a serious whiskey and spirits bar inside the Downtown Container Park — small, excellent, bartenders who know their stuff. Wander the Container Park\'s outdoor collection of shops and small bars. The vibe is entirely different from the Strip: locals, cool air, no casino noise.',
+        address: '707 E Fremont St · Downtown Container Park',
+        notes: []
+      }
+    ]
+  },
+  {
+    id: 3,
+    date: 'Monday — Big Day',
+    location: 'Downtown & The Strip',
+    sublocation: 'Peppermill · Old Vegas · Bavette\'s · Late night',
+    theme: 'downtown',
+    stay: 'Park MGM · 3770 S Las Vegas Blvd',
+    sections: [
+      {
+        label: 'Breakfast — Peppermill',
+        icon: '🍳',
+        content: 'One of the great American diners. Open since 1972, with a fire pit lounge that glows pink and magenta at all hours. Enormous portions — omelets built for two people, ribeyes, crab cakes. The old-Vegas aesthetic is fully intact and not ironic. Order the onion rings.',
+        address: '2985 Las Vegas Blvd S · Open 24 hours',
+        notes: [
+          { type: 'info', text: 'Sit in the Fireside Lounge section if you can. It\'s the whole point.' }
+        ]
+      },
+      {
+        label: 'Morning — Old Vegas Walking Tour',
+        icon: '🏛️',
+        content: 'Las Vegas Walking Tours runs a 2-hour tour out of Old Downtown covering 100 years of history: mob era casinos, the original Strip, classic architecture, the transformation of Fremont. Guide Kelly is reliably excellent — dry humor, deep local knowledge. Tours start at 11am and 2:30pm; book ahead.',
+        address: 'Downtown Las Vegas · Las Vegas Walking Tours',
+        notes: [
+          { type: 'reservation', text: 'Book ahead · Tours at 11am and 2:30pm' },
+          { type: 'info', text: 'Skip the Fremont Experience light show — walk east on Fremont Street instead, it\'s more interesting.' }
+        ]
+      },
+      {
+        label: 'Late Lunch — Yardbird',
+        icon: '🍗',
+        content: 'Chicken and waffles that people come back to Las Vegas specifically for, plus solid avocado toast, biscuits, and grits. The bar seats are good if it\'s crowded. Save room for dinner.',
+        address: 'The Venetian · 3355 S Las Vegas Blvd',
+        notes: []
+      },
+      {
+        label: 'Afternoon — Rest & Pool',
+        icon: '🌴',
+        content: 'Take a breath. Park MGM\'s casino floor is low-key compared to the mega-resorts, which makes it a good place to actually enjoy a few games without sensory overload. Or just lay by the pool. Big dinner tonight.',
+        address: 'Park MGM',
+        notes: []
+      },
+      {
+        label: 'Dinner — Bavette\'s Steakhouse',
+        icon: '🥩',
+        content: 'The best dinner on the trip, right in your hotel. French-inflected steakhouse with a moody, intimate room — dark wood, warm light, classic cocktails. The dry-aged bone-in ribeye with peppercorn crust is the move. Get the bone marrow and Brussels sprouts. The fried chicken is reportedly life-changing if you\'re not feeling steak.',
+        address: 'Park MGM · In-hotel',
+        notes: [
+          { type: 'reservation', text: 'Reservation recommended · Back bar ("secret room") is walk-in if unavailable.' }
+        ]
+      },
+      {
+        label: 'Late Night — Petite Boheme',
+        icon: '🍸',
+        content: 'Best bar in Las Vegas for the vibe you two would actually like — Bohemian-industrial, arts district, cozy couches, genuinely great cocktails. Multiple reviewers compare it to a great NYC bar. Order the Dealer\'s Choice and let them go. Open until 2am.',
+        address: '1407 S Main St · Arts District',
+        notes: []
+      }
+    ]
+  },
+  {
+    id: 4,
+    date: 'Tuesday — Departure',
+    location: 'Las Vegas',
+    sublocation: 'Morning · Check out · Last bite',
+    theme: 'strip',
+    stay: 'Park MGM · Standard checkout 11am',
+    sections: [
+      {
+        label: 'Breakfast — Eataly Café',
+        icon: '☕',
+        content: 'Quick and easy: walk downstairs, grab an espresso and cornetti before the car. Or grab something to go from the market counter. Smooth exit from a smooth hotel.',
+        address: 'Park MGM · Opens 7am',
+        notes: []
+      },
+      {
+        label: 'Check-Out',
+        icon: '🏨',
+        content: 'Standard checkout 11am. Bags to bell desk if your flight is later. The hotel\'s tram connects directly to the Bellagio if you need to kill time nearby.',
+        address: 'Park MGM · 3770 S Las Vegas Blvd',
+        notes: []
+      }
+    ]
+  }
+];
+
+const QUICK_REF = {
+  hours: [
+    { name: 'Peppermill Restaurant', detail: 'Open 24 hours · 2985 Las Vegas Blvd S · Fireside Lounge section is the whole point' },
+    { name: 'Casa Di Amore', detail: 'Closed Tuesday & Wednesday — Sunday works perfectly · 2850 E Tropicana Ave' },
+    { name: 'Stray Pirate', detail: 'Go early or expect to wait — small and popular · 1321 S Commerce St, Arts District' },
+    { name: 'Petite Boheme', detail: 'Open until 2am · 1407 S Main St, Arts District' },
+    { name: 'Eataly Las Vegas', detail: 'Opens 7am · Park MGM · Perfect for quick departure breakfast' },
+    { name: 'Iwana Specialty Coffee', detail: 'Arts District roaster · 61 W Utah Ave · Free street parking on Sundays' }
+  ],
+  reservations: [
+    { name: 'Sparrow + Wolf', detail: 'Reservation required · 4480 Spring Mountain Rd · Let the server guide you — do not fight it' },
+    { name: 'Ton Shou Premium Katsu', detail: 'Reservations recommended · 4049 Spring Mountain Rd · Long waits without one' },
+    { name: 'Bavette\'s Steakhouse', detail: 'Reservation recommended · Park MGM · Walk-in at the back bar ("secret room") if unavailable' },
+    { name: 'Neon Museum', detail: 'Buy tickets online in advance — sells out · 770 Las Vegas Blvd N · Twilight tour recommended' },
+    { name: 'Las Vegas Walking Tours', detail: 'Book ahead · 2-hour tour starting 11am or 2:30pm · Downtown Las Vegas' }
+  ],
+  transit: [
+    { name: 'Sparrow + Wolf', detail: 'Short Uber from Strip (~10 min) · 4480 Spring Mountain Rd · Not walkable from Park MGM' },
+    { name: 'Arts District', detail: 'Short Uber from Park MGM · Main St & Charleston Blvd · Free street parking on Sundays' },
+    { name: 'Stray Pirate', detail: 'Uber to Arts District · 1321 S Commerce St · Not on the Strip' },
+    { name: 'Neon Museum', detail: 'Uber recommended (~10 min from Strip) · 770 Las Vegas Blvd N' },
+    { name: 'Casa Di Amore', detail: 'Uber required — east side, off-strip · 2850 E Tropicana Ave · ~15 min from Park MGM' },
+    { name: 'Park MGM Tram', detail: 'Connects directly to Bellagio — useful for Strip exploration or killing time before checkout' }
+  ],
+  tips: [
+    { name: 'Park MGM is smoke-free', detail: 'One of the only smoke-free casino hotels on the Strip. The calm vibe is real — worth choosing wisely.' },
+    { name: 'Spring Mountain Road', detail: 'The move for serious eating in Vegas. Sparrow + Wolf, Ton Shou, and True Matcha are all in this corridor.' },
+    { name: 'Bellagio Fountain overlook', detail: 'Best photos 4–5pm during golden hour. The park bridge south of Bellagio gives the best unobstructed angle.' },
+    { name: 'Fremont Street — go east', detail: 'Skip the Fremont Experience light show. Walk east on Fremont St instead — more interesting, more local.' },
+    { name: 'Bavette\'s back bar', detail: 'If you can\'t get a dinner reservation, the "secret room" back bar is walk-in. Same kitchen, same quality.' },
+    { name: 'Neon Museum twilight tour', detail: 'The twilight tour is the only way to do it — signs are lit against a darkening sky. Afternoon tours miss the whole point.' }
+  ]
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
+const state = { searchOpen: false, sheetOpen: false, currentTab: 'hours' };
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+function init() {
+  renderDays();
+  setupSearch();
+  setupSheet();
+  setupServiceWorker();
+}
+
+// ─── RENDER DAYS ──────────────────────────────────────────────────────────────
+
+function renderDays() {
+  document.getElementById('main-content').innerHTML =
+    DAYS.map(day => `
+      <div class="day-card ${day.theme}" data-day="${day.id}">
+        <div class="day-header" onclick="toggleDay(${day.id})">
+          <div class="day-header-text">
+            <div class="day-label">Day ${day.id}</div>
+            <div class="day-date">${esc(day.date)}</div>
+            <div class="day-loc">${esc(day.location)}${day.sublocation ? ` · ${esc(day.sublocation)}` : ''}</div>
+            <div class="day-stay">🏨 ${esc(day.stay)}</div>
+          </div>
+          <div class="chevron">▼</div>
+        </div>
+        <div class="sections">
+          ${day.sections.map(s => renderSection(day.id, s)).join('')}
+        </div>
+      </div>
+    `).join('');
+}
+
+function renderSection(dayId, section) {
+  const alertBadges = (section.notes || [])
+    .filter(n => n.type !== 'info')
+    .slice(0, 3)
+    .map(n => `<span class="badge">${noteIcon(n.type)}</span>`)
+    .join('');
+
+  const notesHtml = (section.notes || []).map(n =>
+    `<div class="note ${noteClass(n.type, section.label)}"><span class="note-icon">${noteIcon(n.type)}</span><span class="note-text">${esc(n.text)}</span></div>`
+  ).join('');
+
+  return `
+    <div class="section" data-day="${dayId}" data-label="${esc(section.label)}">
+      <div class="section-header" onclick="toggleSection(this.parentElement)">
+        <span class="section-icon">${section.icon}</span>
+        <span class="section-label-text">${esc(section.label)}</span>
+        ${alertBadges ? `<div class="section-badges">${alertBadges}</div>` : ''}
+        <span class="section-chev">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="section-content">${esc(section.content)}</div>
+        ${section.address ? `<div class="section-address"><span>📍</span><span>${esc(section.address)}</span></div>` : ''}
+        ${notesHtml ? `<div class="section-notes">${notesHtml}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function toggleDay(dayId) {
+  document.querySelector(`.day-card[data-day="${dayId}"]`).classList.toggle('open');
+}
+
+function toggleSection(el) {
+  el.classList.toggle('open');
+}
+
+// ─── SEARCH ───────────────────────────────────────────────────────────────────
+
+function setupSearch() {
+  const toggleBtn = document.getElementById('search-toggle');
+  const input     = document.getElementById('search-input');
+  const closeBtn  = document.getElementById('search-close-btn');
+  const bar       = document.getElementById('search-bar');
+  const results   = document.getElementById('search-results');
+  const history   = document.getElementById('search-history');
+  const main      = document.getElementById('main-content');
+  const legend    = document.getElementById('legend');
+
+  toggleBtn.addEventListener('click', () => {
+    state.searchOpen = !state.searchOpen;
+    bar.classList.toggle('hidden', !state.searchOpen);
+    if (state.searchOpen) {
+      input.focus();
+      showHistory();
+    } else {
+      closeSearch();
+    }
+  });
+
+  closeBtn.addEventListener('click', closeSearch);
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    history.classList.add('hidden');
+    if (q.length >= 2) {
+      const res = doSearch(q);
+      renderSearchResults(res, q);
+      results.classList.remove('hidden');
+      main.classList.add('hidden');
+      legend.classList.add('hidden');
+    } else if (q.length === 0) {
+      results.classList.add('hidden');
+      main.classList.remove('hidden');
+      legend.classList.remove('hidden');
+      showHistory();
+    }
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && input.value.trim()) saveHistory(input.value.trim());
+    if (e.key === 'Escape') closeSearch();
+  });
+}
+
+function closeSearch() {
+  state.searchOpen = false;
+  document.getElementById('search-bar').classList.add('hidden');
+  document.getElementById('search-history').classList.add('hidden');
+  document.getElementById('search-results').classList.add('hidden');
+  document.getElementById('main-content').classList.remove('hidden');
+  document.getElementById('legend').classList.remove('hidden');
+  document.getElementById('search-input').value = '';
+}
+
+function doSearch(query) {
+  const q = query.toLowerCase();
+  const results = [];
+
+  DAYS.forEach(day => {
+    day.sections.forEach(section => {
+      const haystack = [
+        section.label, section.content, section.address || '',
+        day.location, day.sublocation || '', day.stay, day.date,
+        ...(section.notes || []).map(n => n.text)
+      ].join(' ').toLowerCase();
+
+      if (haystack.includes(q)) {
+        results.push({ type: 'section', day, section });
+      }
+    });
+  });
+
+  const catLabels = { hours: 'Hours', reservations: 'Reservations', transit: 'Transit', tips: 'Tips' };
+  Object.entries(QUICK_REF).forEach(([cat, items]) => {
+    items.forEach(item => {
+      if (`${item.name} ${item.detail}`.toLowerCase().includes(q)) {
+        results.push({ type: 'ref', cat, catLabel: catLabels[cat], item });
+      }
+    });
+  });
+
+  return results;
+}
+
+function renderSearchResults(results, query) {
+  const container = document.getElementById('search-results');
+  if (results.length === 0) {
+    container.innerHTML = `<div class="search-empty">No results for "<strong>${esc(query)}</strong>"</div>`;
+    return;
+  }
+
+  container.innerHTML = results.map(r => {
+    if (r.type === 'section') {
+      const snippet = r.section.content.replace(/\n/g, ' ').slice(0, 120);
+      return `
+        <div class="search-result" onclick="jumpTo(${r.day.id}, ${JSON.stringify(r.section.label)})">
+          <div class="result-tag">Day ${r.day.id} · ${esc(r.day.date)}</div>
+          <div class="result-main">${hilite(r.section.label, query)}</div>
+          <div class="result-sub">${hilite(snippet, query)}${r.section.content.length > 120 ? '…' : ''}</div>
+          ${r.section.address ? `<div class="result-sub">📍 ${hilite(r.section.address, query)}</div>` : ''}
+        </div>
+      `;
+    } else {
+      return `
+        <div class="search-result" onclick="openSheet('${r.cat}')">
+          <div class="result-tag">Quick Ref · ${esc(r.catLabel)}</div>
+          <div class="result-main">${hilite(r.item.name, query)}</div>
+          <div class="result-sub">${hilite(r.item.detail, query)}</div>
+        </div>
+      `;
+    }
+  }).join('');
+}
+
+function jumpTo(dayId, sectionLabel) {
+  closeSearch();
+  const card = document.querySelector(`.day-card[data-day="${dayId}"]`);
+  if (!card) return;
+  card.classList.add('open');
+  const section = card.querySelector(`.section[data-label="${sectionLabel.replace(/"/g, '\\"')}"]`);
+  if (section) section.classList.add('open');
+  setTimeout(() => {
+    const target = section || card;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 60);
+}
+
+function hilite(text, query) {
+  const safe = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.split(new RegExp(`(${safe})`, 'gi'))
+    .map(p => p.toLowerCase() === query.toLowerCase() ? `<mark>${esc(p)}</mark>` : esc(p))
+    .join('');
+}
+
+// ─── SEARCH HISTORY ───────────────────────────────────────────────────────────
+
+function saveHistory(q) {
+  let h = getHistory().filter(x => x !== q);
+  h.unshift(q);
+  localStorage.setItem('lv-trip-v1:history', JSON.stringify(h.slice(0, 6)));
+}
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('lv-trip-v1:history') || '[]'); } catch { return []; }
+}
+
+function showHistory() {
+  const div = document.getElementById('search-history');
+  const h = getHistory();
+  if (!h.length) { div.classList.add('hidden'); return; }
+  div.innerHTML = h.map(q =>
+    `<button class="history-chip" onclick="applyHistory(${JSON.stringify(q)})">${esc(q)}</button>`
+  ).join('');
+  div.classList.remove('hidden');
+}
+
+function applyHistory(q) {
+  const input = document.getElementById('search-input');
+  input.value = q;
+  input.dispatchEvent(new Event('input'));
+}
+
+// ─── QUICK REF SHEET ──────────────────────────────────────────────────────────
+
+function setupSheet() {
+  document.getElementById('quick-ref-btn').addEventListener('click', () => openSheet(state.currentTab));
+  document.getElementById('sheet-close-btn').addEventListener('click', closeSheet);
+  document.getElementById('sheet-backdrop').addEventListener('click', closeSheet);
+
+  document.querySelectorAll('.sheet-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      state.currentTab = tab.dataset.tab;
+      document.querySelectorAll('.sheet-tab').forEach(t => t.classList.toggle('active', t === tab));
+      renderSheetContent(state.currentTab);
+    });
+  });
+}
+
+function openSheet(tab) {
+  if (tab) {
+    state.currentTab = tab;
+    document.querySelectorAll('.sheet-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === tab)
+    );
+  }
+  renderSheetContent(state.currentTab);
+
+  const backdrop = document.getElementById('sheet-backdrop');
+  const sheet    = document.getElementById('quick-ref-sheet');
+
+  backdrop.style.display = 'block';
+  sheet.style.display = 'flex';
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    backdrop.classList.add('vis');
+    sheet.classList.add('vis');
+  }));
+
+  state.sheetOpen = true;
+}
+
+function closeSheet() {
+  const backdrop = document.getElementById('sheet-backdrop');
+  const sheet    = document.getElementById('quick-ref-sheet');
+  backdrop.classList.remove('vis');
+  sheet.classList.remove('vis');
+  setTimeout(() => {
+    backdrop.style.display = 'none';
+    sheet.style.display = 'none';
+  }, 260);
+  state.sheetOpen = false;
+}
+
+function renderSheetContent(tab) {
+  const items = QUICK_REF[tab] || [];
+  document.getElementById('sheet-content').innerHTML = items.map(item => `
+    <div class="ref-item">
+      <div class="ref-name">${esc(item.name)}</div>
+      <div class="ref-detail">${esc(item.detail)}</div>
+    </div>
+  `).join('');
+}
+
+// ─── SERVICE WORKER ───────────────────────────────────────────────────────────
+
+function setupServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+
+const VALID_NOTE_TYPES = new Set(['cash', 'warning', 'reservation', 'info']);
+
+function noteClass(type, sectionTitle) {
+  if (!VALID_NOTE_TYPES.has(type)) console.warn(`Unknown note type "${type}" in section "${sectionTitle}"`);
+  return type === 'cash' ? 'note-cash' : type === 'warning' ? 'note-warn' : type === 'reservation' ? 'note-res' : 'note-info';
+}
+
+function noteIcon(type) {
+  return type === 'cash' ? '💵' : type === 'warning' ? '⚠️' : type === 'reservation' ? '📋' : 'ℹ️';
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ─── START ────────────────────────────────────────────────────────────────────
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "Las Vegas 2026",
+  "short_name": "LV Trip",
+  "description": "Mobile trip planner · Las Vegas · George & Doug · Spring 2026",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f2ee",
+  "theme_color": "#2c3e50",
+  "icons": [
+    {
+      "src": "icon-192.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
