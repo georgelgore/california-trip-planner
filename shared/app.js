@@ -1,3 +1,8 @@
+// ─── WORKER CONFIG ───────────────────────────────────────────────────────────
+
+const WORKER_URL = 'https://trip-itinerary-edits.georgelgore.workers.dev';
+const PASSPHRASE_KEY = 'trip-edit-passphrase';
+
 // ─── STATE ───────────────────────────────────────────────────────────────────
 
 const state = { searchOpen: false, sheetOpen: false, currentTab: EDIT_CFG.initialTab, ddOpen: false, overviewPaneRendered: false };
@@ -993,10 +998,10 @@ function renderDayEdit() {
       + '</div>';
   }).join('');
 
-  const hasPAT = !!getPAT();
-  const noticeText = hasPAT
+  const hasPassphrase = !!getPassphrase();
+  const noticeText = hasPassphrase
     ? 'Hitting Done will save & publish to GitHub.'
-    : 'Hitting Done saves to this browser only. Tap ⚙ to add a GitHub token to publish.';
+    : 'Hitting Done saves to this browser only. Tap ⚙ to add the trip passphrase to publish.';
 
   const noticeHtml = ''
     + '<div class="edit-mode-notice">'
@@ -1147,15 +1152,15 @@ async function saveEdits() {
     localStorage.setItem(EDIT_CFG.storageKey, JSON.stringify(DAYS));
   } catch (e) { console.warn('localStorage save failed', e); }
 
-  const pat = getPAT();
-  if (pat) {
+  const passphrase = getPassphrase();
+  if (passphrase) {
     showToast('Publishing to GitHub…', 'info');
     try {
-      await commitToGitHub(DAYS, pat);
+      await commitViaWorker(DAYS, passphrase);
       showToast('Saved & published ✓', 'ok');
     } catch (e) {
-      console.error('GitHub commit failed', e);
-      showToast('Saved here, but GitHub publish failed: ' + (e.message || 'unknown'), 'warn');
+      console.error('Worker commit failed', e);
+      showToast('Saved here, but publish failed: ' + (e.message || 'unknown'), 'warn');
     }
   } else {
     showToast('Saved in this browser', 'ok');
@@ -1165,48 +1170,22 @@ async function saveEdits() {
   exitEditMode();
 }
 
-async function commitToGitHub(days, pat) {
-  const apiUrl = 'https://api.github.com/repos/'
-    + EDIT_CFG.githubOwner + '/' + EDIT_CFG.githubRepo
-    + '/contents/' + EDIT_CFG.editsPath;
-
-  // Get current SHA (file may not exist)
-  let sha;
-  const getRes = await fetch(apiUrl + '?ref=' + EDIT_CFG.githubBranch, {
-    headers: { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json' },
-  });
-  if (getRes.ok) {
-    const d = await getRes.json();
-    sha = d.sha;
-  } else if (getRes.status !== 404) {
-    throw new Error('GET ' + getRes.status);
-  }
-
-  const newPayload = JSON.stringify({
-    updatedAt: new Date().toISOString(),
-    days: days,
-  }, null, 2);
-
-  // Base64-encode the UTF-8 bytes
-  const base64 = btoa(unescape(encodeURIComponent(newPayload)));
-
-  const putRes = await fetch(apiUrl, {
-    method: 'PUT',
+async function commitViaWorker(days, passphrase) {
+  const res = await fetch(WORKER_URL + '/commit', {
+    method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + pat,
-      'Accept': 'application/vnd.github+json',
       'Content-Type': 'application/json',
+      'X-Edit-Passphrase': passphrase,
     },
     body: JSON.stringify({
+      editsPath: EDIT_CFG.editsPath,
+      days: days,
       message: 'Edit Day ' + (state.editing ? state.editing.draft.id : '?') + ' on ' + TRIP_META.shortName,
-      content: base64,
-      sha: sha,
-      branch: EDIT_CFG.githubBranch,
     }),
   });
-  if (!putRes.ok) {
-    const t = await putRes.text();
-    throw new Error('PUT ' + putRes.status + ': ' + t.slice(0, 120));
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(res.status + ': ' + t.slice(0, 120));
   }
 }
 
@@ -1214,7 +1193,7 @@ async function commitToGitHub(days, pat) {
 function openSettings() {
   const sheet = document.getElementById('settings-sheet');
   const backdrop = document.getElementById('sheet-backdrop');
-  document.getElementById('pat-input').value = getPAT() || '';
+  document.getElementById('pat-input').value = getPassphrase() || '';
   updateSettingsStatus();
   backdrop.style.display = 'block';
   sheet.style.display = 'flex';
@@ -1239,26 +1218,26 @@ function closeSettings() {
 
 function updateSettingsStatus() {
   const el = document.getElementById('settings-status');
-  const pat = getPAT();
-  if (pat) {
+  const p = getPassphrase();
+  if (p) {
     el.className = 'settings-status ok';
-    el.textContent = 'Token saved on this device (' + pat.length + ' chars). Edits will publish to GitHub.';
+    el.textContent = 'Passphrase set on this device. Edits will publish to GitHub.';
   } else {
     el.className = 'settings-status';
-    el.textContent = 'No token set. Edits save to this browser only.';
+    el.textContent = 'No passphrase set. Edits save to this browser only.';
   }
 }
 
-function savePAT() {
-  const pat = document.getElementById('pat-input').value.trim();
-  if (pat) localStorage.setItem(EDIT_CFG.patKey, pat);
-  else localStorage.removeItem(EDIT_CFG.patKey);
+function savePassphrase() {
+  const p = document.getElementById('pat-input').value.trim();
+  if (p) localStorage.setItem(PASSPHRASE_KEY, p);
+  else localStorage.removeItem(PASSPHRASE_KEY);
   closeSettings();
-  showToast(pat ? 'Token saved' : 'Token cleared', 'ok');
+  showToast(p ? 'Passphrase saved' : 'Passphrase cleared', 'ok');
 }
 
-function getPAT() {
-  try { return localStorage.getItem(EDIT_CFG.patKey); } catch (e) { return null; }
+function getPassphrase() {
+  try { return localStorage.getItem(PASSPHRASE_KEY); } catch (e) { return null; }
 }
 
 // ─── EDIT MODE: TOAST ────────────────────────────────────────────────────────
@@ -1291,7 +1270,7 @@ function bindEditButtons() {
   });
   document.getElementById('edit-settings-btn').addEventListener('click', openSettings);
   document.getElementById('settings-cancel-btn').addEventListener('click', closeSettings);
-  document.getElementById('settings-save-btn').addEventListener('click', savePAT);
+  document.getElementById('settings-save-btn').addEventListener('click', savePassphrase);
 }
 
 // ─── EDIT MODE: ASYNC OVERLAY FROM REMOTE ────────────────────────────────────

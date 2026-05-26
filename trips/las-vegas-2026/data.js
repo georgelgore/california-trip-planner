@@ -15,7 +15,6 @@ const EDIT_CFG = {
   githubBranch: 'main',
   editsPath:    'trips/las-vegas-2026/edits.json',
   storageKey:   'lv-trip-v1:days',
-  patKey:       'trip-gh-pat',
   initialTab:   'hours',
   catLabels: {
     hours:        'Hours',

@@ -15,7 +15,6 @@ const EDIT_CFG = {
   githubBranch: 'main',
   editsPath: 'trips/california-2026/edits.json',
   storageKey: 'ca-trip-v2:days',
-  patKey: 'trip-gh-pat',
   initialTab: 'cashOnly',
   catLabels: {
     cashOnly: 'Cash Only',

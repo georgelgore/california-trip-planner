@@ -60,14 +60,13 @@
 <!-- ── SETTINGS SHEET ── -->
 <div id="settings-sheet">
   <div class="sheet-handle"></div>
-  <div class="settings-title">GitHub publishing</div>
+  <div class="settings-title">Publish edits</div>
   <div class="settings-sub">
-    Edits save to <b>this browser</b> by default. To publish them to <code>georgelgore/trip-itinerary</code> so they reach the live site, paste a fine-grained <b>Personal Access Token</b> below with <b>Contents: Read &amp; Write</b> on this one repo. Stored only on this device, never sent anywhere except api.github.com.<br><br>
-    <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Generate a token →</a>
+    Edits save to <b>this browser</b> by default. Enter the shared trip passphrase below to publish changes to GitHub so they reach everyone's device. Ask your trip organiser for the passphrase.
   </div>
   <div class="settings-field">
-    <label>Personal Access Token</label>
-    <input type="password" id="pat-input" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
+    <label>Trip passphrase</label>
+    <input type="password" id="pat-input" placeholder="e.g. vegas2026" autocomplete="off" spellcheck="false">
   </div>
   <div class="settings-actions">
     <button class="settings-cancel" id="settings-cancel-btn">Cancel</button>

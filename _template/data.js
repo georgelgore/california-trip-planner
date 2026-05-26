@@ -15,7 +15,6 @@ const EDIT_CFG = {
   githubBranch: 'main',
   editsPath:    'trips/TRIP_FOLDER/edits.json',     // path within repo
   storageKey:   'TRIP_ID:days',                     // localStorage key for cached days
-  patKey:       'trip-gh-pat',                      // shared across all trips
   initialTab:   'cashOnly',                         // first Quick Ref tab shown
   catLabels: {                                      // must match QUICK_REF keys + sheet-tabs
     cashOnly:     'Cash Only',
