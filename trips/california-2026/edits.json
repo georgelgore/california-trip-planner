@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-26T03:13:15.378Z",
+  "updatedAt": "2026-05-26T03:13:57.092Z",
   "days": [
     {
       "id": 1,
@@ -24,7 +24,7 @@
         {
           "label": "Lunch",
           "icon": "🍴",
-          "content": "Ferry Building Marketplace — artisan food vendors, local produce, great for grazing. Walkable from hotel across the Embarcadero.\n\ntest! test!",
+          "content": "Ferry Building Marketplace — artisan food vendors, local produce, great for grazing. Walkable from hotel across the Embarcadero.",
           "address": "1 Ferry Building, San Francisco",
           "notes": [
             {
